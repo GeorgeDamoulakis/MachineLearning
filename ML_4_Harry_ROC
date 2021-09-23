@@ -1,0 +1,99 @@
+import matplotlib.pyplot as plt  
+from sklearn import datasets, metrics, model_selection, svm
+from pandas import read_csv
+from sklearn.ensemble import RandomForestClassifier
+from pandas.plotting import scatter_matrix
+from matplotlib import pyplot
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import StratifiedKFold
+from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import accuracy_score
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.naive_bayes import GaussianNB
+from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.datasets import make_classification
+import numpy as np
+import matplotlib.pyplot as plt
+from itertools import cycle
+
+from sklearn import datasets, metrics, model_selection, svm
+from sklearn.metrics import roc_curve, auc
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import label_binarize
+from sklearn.multiclass import OneVsRestClassifier
+from scipy import interp
+from sklearn.metrics import roc_auc_score
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import roc_curve, auc
+
+
+# Load dataset
+url = "C:\\Users\\grdmg\\populatedV3.csv"
+names = ["LymphedemaAfterSurgery_YN", "BreastReconstruction_YN", "RT_ever", "Median_Income", "Age_Group", "Distance_grp", "Race_Ethn", "Marital", "Smoking", "Employment", "Stage", "Insurance", "Reconstruction_Type", "Mastectomy_YN", "MastectomyType1", "Surgery_type", "BMIatEncounter"]
+dataset = read_csv(url, names=names)
+
+#print(dataset.shape)
+# head
+#print(dataset.head(20))
+
+# Split-out validation dataset
+array = dataset.values
+X1 = dataset.drop('LymphedemaAfterSurgery_YN', 1)
+X = X1.values
+#print(X)
+y = array[:,0]
+#print(y)
+
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20, random_state = 4)
+
+sc_X = StandardScaler()
+X_train = sc_X.fit_transform(X_train)
+X_test = sc_X.transform(X_test)
+
+#SVM classifier
+model_SVC = SVC(kernel = 'rbf', random_state = 4)
+model_SVC.fit(X_train, y_train)
+y_pred_svm = model_SVC.decision_function(X_test)
+
+#Logistic Classifier
+model_logistic = LogisticRegression()
+model_logistic.fit(X_train, y_train)
+y_pred_logistic = model_logistic.decision_function(X_test)
+
+#RFC Classifier
+model_RFC = RandomForestClassifier(max_depth=6, random_state=0)
+model_RFC.fit(X_train, y_train)
+y_pred_RFC = model_RFC.decision_function(X_test)
+
+#Plot ROC and compare AUC¶
+logistic_fpr, logistic_tpr, threshold = roc_curve(y_test, y_pred_logistic)
+auc_logistic = auc(logistic_fpr, logistic_tpr)
+
+svm_fpr, svm_tpr, threshold = roc_curve(y_test, y_pred_svm)
+auc_svm = auc(svm_fpr, svm_tpr)
+
+RFC_fpr, RFC_tpr, threshold = roc_curve(y_test, y_pred_RFC)
+auc_RFC = auc(RFC_fpr, RFC_tpr)
+
+plt.figure(figsize=(5, 5), dpi=100)
+plt.plot(svm_fpr, svm_tpr, linestyle='-', label='SVM (auc = %0.3f)' % auc_svm)
+plt.plot(logistic_fpr, logistic_tpr, marker='.', label='Logistic (auc = %0.3f)' % auc_logistic)
+plt.plot(RFC_fpr, RFC_tpr, marker='.', label='RFC (auc = %0.3f)' % auc_RFC)
+
+plt.plot([0, 1], [0, 1], color='navy', linestyle='--')
+plt.xlabel('False Positive Rate -->')
+plt.ylabel('True Positive Rate -->')
+
+plt.legend()
+
+plt.show()
